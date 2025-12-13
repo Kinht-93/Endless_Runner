@@ -1,27 +1,12 @@
-// MOHAMMADINE ANAS
-// gcc config.c -o config
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-typedef struct {
-    int height;
-    int width;
-    char sound[4];
-    char username[256];
-
-    char key_jump;
-
-} Config;
+#include "config.h"
 
 void set_defaults(Config *c) {
     c->height = 600;
     c->width  = 800;
     strcpy(c->sound, "ON");
-    strcpy(c->username, "anaslebg");
-
+    strcpy(c->username, "Endless_Runner");
     c->key_jump = ' ';
+    c->key_quit = 'q';
 }
 
 char *trim(char *s) {
@@ -51,15 +36,13 @@ void strtoupper(char *s) {
     }
 }
 
-int main(void) {
+Config load_config() {
     const char *path = "config.ini";
     Config cfg;
     set_defaults(&cfg);
 
     FILE *f = fopen(path, "r");
-    if (!f) {
-        printf("Aucun fichier trouvé -> valeurs par défaut utilisées.\n");
-    } else {
+    if (f) {
         char line[512];
         while (fgets(line, sizeof(line), f)) {
             char *ln = trim(line);
@@ -91,9 +74,11 @@ int main(void) {
                     cfg.username[sizeof(cfg.username)-1] = '\0';
                 }
             }
-            /* Lecture de key_jump */
             else if (str_equal_ignorecase(key, "key_jump")) {
                 if (val[0]) cfg.key_jump = val[0];
+            }
+            else if (str_equal_ignorecase(key, "key_quit")) {
+                if (val[0]) cfg.key_quit = val[0];
             }
         }
         fclose(f);
@@ -107,30 +92,5 @@ int main(void) {
     if (cfg.username[0] == '\0')
         strcpy(cfg.username, "Player");
 
-    /* Réécriture */
-    FILE *fw = fopen(path, "w");
-    if (fw) {
-        fprintf(fw, "height=%d\n", cfg.height);
-        fprintf(fw, "width=%d\n", cfg.width);
-        fprintf(fw, "sound=%s\n", cfg.sound);
-        fprintf(fw, "username=%s\n", cfg.username);
-
-        fprintf(fw, "key_jump=%c\n", cfg.key_jump);
-
-        fclose(fw);
-    }
-
-    printf("Configuration actuelle:\n");
-    printf("height   = %d\n", cfg.height);
-    printf("width    = %d\n", cfg.width);
-    printf("sound    = %s\n", cfg.sound);
-    printf("username = %s\n", cfg.username);
-
-    printf("key_jump = ");
-    if (cfg.key_jump == ' ')
-        printf("(espace)\n");
-    else
-        printf("%c\n", cfg.key_jump);
-
-    return 0;
+    return cfg;
 }
