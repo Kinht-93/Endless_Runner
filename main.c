@@ -11,16 +11,9 @@ typedef struct {
     int isJumping;
 } Player;
 
-typedef struct {
-    float x, y;
-    int width, height;
-    int active;
-} Obstacle;
-
 #define GRAVITY 0.8f
 #define JUMP_FORCE -15.0f
 #define GROUND_Y 500
-#define PLAYER_SPEED 5.0f
 
 SDL_Keycode get_key_from_char(char c) {
     if (c == ' ') return SDLK_SPACE;
@@ -34,9 +27,7 @@ SDL_Keycode get_key_from_char(char c) {
 
 int main(void) {
     Config cfg = load_config();
-
     SDL_SetHint(SDL_HINT_VIDEODRIVER, "x11");
-
     
     int sdl_flags = SDL_INIT_VIDEO;
     if (strcmp(cfg.sound, "ON") == 0) {
@@ -76,7 +67,6 @@ int main(void) {
         return 1;
     }
 
-
     Player player = {
         .x = 100,
         .y = GROUND_Y,
@@ -85,18 +75,6 @@ int main(void) {
         .height = 50,
         .isJumping = 0
     };
-
-    Obstacle obstacles[5];
-    for (int i = 0; i < 5; i++) {
-        obstacles[i].x = cfg.width + i * 300;
-        obstacles[i].y = GROUND_Y;
-        obstacles[i].width = 40;
-        obstacles[i].height = 60;
-        obstacles[i].active = 1;
-    }
-
-    int gameOver = 0;
-
 
     SDL_Event event;
     int running = 1;
@@ -118,43 +96,22 @@ int main(void) {
                 if (event.key.keysym.sym == get_key_from_char(cfg.key_quit)) {
                     running = 0;
                 }
-                if (event.key.keysym.sym == get_key_from_char(cfg.key_jump) && !player.isJumping && !gameOver) {
+                if (event.key.keysym.sym == get_key_from_char(cfg.key_jump) && !player.isJumping) {
                     player.velY = JUMP_FORCE;
                     player.isJumping = 1;
                 }
             }
         }
 
-        if (!gameOver) {
-            player.velY += GRAVITY;
-            player.y += player.velY;
-            
-            if (player.y >= GROUND_Y) {
-                player.y = GROUND_Y;
-                player.velY = 0;
-                player.isJumping = 0;
-            }
-            
-            for (int i = 0; i < 5; i++) {
-                if (obstacles[i].active) {
-                    obstacles[i].x -= PLAYER_SPEED;
-                    
-                    if (obstacles[i].x + obstacles[i].width < 0) {
-                        obstacles[i].x = cfg.width;
-                    }
-                    
-                    SDL_Rect playerRect = {(int)player.x, (int)player.y, player.width, player.height};
-                    SDL_Rect obstacleRect = {(int)obstacles[i].x, (int)obstacles[i].y, obstacles[i].width, obstacles[i].height};
-                    
-                    if (SDL_HasIntersection(&playerRect, &obstacleRect)) {
-                        gameOver = 1;
-                        printf("Game Over!\n");
-                    }
-                }
-            }
+        player.velY += GRAVITY;
+        player.y += player.velY;
+        
+        if (player.y >= GROUND_Y) {
+            player.y = GROUND_Y;
+            player.velY = 0;
+            player.isJumping = 0;
         }
 
-        
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
@@ -162,21 +119,9 @@ int main(void) {
         SDL_Rect ground = {0, GROUND_Y + player.height, cfg.width, cfg.height - GROUND_Y - player.height};
         SDL_RenderFillRect(renderer, &ground);
 
-        if (gameOver) {
-            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); 
-        } else {
-            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); 
-        }
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
         SDL_Rect playerRect = {(int)player.x, (int)player.y, player.width, player.height};
         SDL_RenderFillRect(renderer, &playerRect);
-
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        for (int i = 0; i < 5; i++) {
-            if (obstacles[i].active) {
-                SDL_Rect obstacleRect = {(int)obstacles[i].x, (int)obstacles[i].y, obstacles[i].width, obstacles[i].height};
-                SDL_RenderFillRect(renderer, &obstacleRect);
-            }
-        }
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
