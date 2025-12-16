@@ -17,10 +17,6 @@ typedef struct {
 
 SDL_Keycode get_key_from_char(char c) {
     if (c == ' ') return SDLK_SPACE;
-    if (c == 'w' || c == 'W') return SDLK_w;
-    if (c == 'a' || c == 'A') return SDLK_a;
-    if (c == 's' || c == 'S') return SDLK_s;
-    if (c == 'd' || c == 'D') return SDLK_d;
     if (c == 'q' || c == 'Q') return SDLK_q;
     return SDLK_SPACE;
 }
