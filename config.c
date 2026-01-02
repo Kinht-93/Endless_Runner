@@ -7,6 +7,8 @@ void set_defaults(Config *c) {
     strcpy(c->username, "Endless_Runner");
     c->key_jump = ' ';
     c->key_quit = 'q';
+    c->key_crouch = 's';
+    c->key_reset = 'r';
 }
 
 char *trim(char *s) {
@@ -79,6 +81,12 @@ Config load_config() {
             }
             else if (str_equal_ignorecase(key, "key_quit")) {
                 if (val[0]) cfg.key_quit = val[0];
+            }
+            else if (str_equal_ignorecase(key, "key_crouch")) {
+                if (val[0]) cfg.key_crouch = val[0];
+            }
+            else if (str_equal_ignorecase(key, "key_reset")) {
+                if (val[0]) cfg.key_reset = val[0];
             }
         }
         fclose(f);

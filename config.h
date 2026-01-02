@@ -12,6 +12,8 @@ typedef struct {
     char username[256];
     char key_jump;
     char key_quit;
+    char key_crouch;
+    char key_reset;
 } Config;
 
 Config load_config();
