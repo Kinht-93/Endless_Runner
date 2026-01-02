@@ -133,7 +133,6 @@ int main(void) {
                     player.isJumping = 1;
                 }
                 if (event.key.keysym.sym == SDLK_r && gameOver) {
-                    // Restart game
                     player.x = 100;
                     player.y = GROUND_Y;
                     player.velX = 0;
@@ -161,13 +160,11 @@ int main(void) {
         }
 
         if (!gameOver) {
-            // Horizontal movement
             player.velX = 0;
             if (leftPressed) player.velX -= PLAYER_SPEED;
             if (rightPressed) player.velX += PLAYER_SPEED;
             player.x += player.velX;
 
-            // Keep player within screen bounds
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > cfg.width) player.x = cfg.width - player.width;
 
@@ -182,7 +179,6 @@ int main(void) {
             
             update_map(&gameMap, cfg.width, cfg.height);
             
-            // Check collisions with obstacles
             for (int i = 0; i < gameMap.obstacleCount; i++) {
                 if (gameMap.obstacles[i].active) {
                     SDL_Rect playerRect = {(int)player.x, (int)player.y, player.width, player.height};
@@ -195,7 +191,6 @@ int main(void) {
                 }
             }
 
-            // Update score based on distance
             update_score(&scoreSys, (int)gameMap.speed);
         }
 
@@ -223,7 +218,6 @@ int main(void) {
             }
         }
 
-        // Render score
         char scoreText[64];
         sprintf(scoreText, "Score: %d", scoreSys.currentScore);
         SDL_Color white = {255, 255, 255, 255};
