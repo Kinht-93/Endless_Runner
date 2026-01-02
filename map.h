@@ -8,6 +8,7 @@
 #define MAX_OBSTACLES 20
 #define SEGMENT_WIDTH 400
 #define MIN_GAP 80
+#define GROUND_Y 500
 
 typedef struct {
     float x, y;
@@ -25,7 +26,6 @@ typedef struct {
 
 void init_map(Map *map, int screenWidth, int screenHeight);
 void update_map(Map *map, int screenWidth, int screenHeight);
-int is_map_feasible(Map *map, int screenWidth, int screenHeight);
-void generate_segment(Map *map, int startX, int screenWidth, int screenHeight);
+void generate_segment(Map *map, int startX, int screenWidth, int screenHeight);  // ← AJOUTE CETTE LIGNE
 
 #endif
