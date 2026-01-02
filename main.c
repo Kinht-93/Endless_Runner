@@ -187,7 +187,7 @@ int main(void) {
                         player.y -= player.baseHeight / 2;
                     }
                 }
-                if (event.key.keysym.sym == get_key_from_char(cfg.key_reset)) {
+                if (event.key.keysym.sym == SDLK_r) {
                     reset_game(&player);
                     init_map(&gameMap, cfg.width, cfg.height);
                     scoreSys.currentScore = 0;
