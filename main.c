@@ -7,6 +7,8 @@
 #include "map.h"
 #include "score.h"
 
+#define MAX_OBSTACLES 20
+
 typedef struct {
     float x, y;
     float velX, velY;
@@ -50,7 +52,6 @@ void reset_game(Player* player) {
 
 void player_die(Player *p) {
     p->life--;
-
     if (p->life <= 0) {
         reset_game(p);
     } else {
@@ -68,9 +69,7 @@ void player_die(Player *p) {
 
 int main(void) {
     Config cfg = load_config();
-
     SDL_SetHint(SDL_HINT_VIDEODRIVER, "x11");
-
     
     int sdl_flags = SDL_INIT_VIDEO;
     if (strcmp(cfg.sound, "ON") == 0) {
@@ -103,11 +102,7 @@ int main(void) {
         return 1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(
-        window,
-        -1,
-        SDL_RENDERER_ACCELERATED
-    );
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     if (!renderer) {
         printf("Erreur SDL_CreateRenderer: %s\n", SDL_GetError());
@@ -121,7 +116,6 @@ int main(void) {
         printf("Erreur TTF_OpenFont: %s\n", TTF_GetError());
         printf("Le texte ne sera pas affiché.\n");
     }
-
 
     Player player = {
         .x = 100,
@@ -146,8 +140,6 @@ int main(void) {
 
     int gameOver = 0;
     int leftPressed = 0, rightPressed = 0;
-
-
     SDL_Event event;
     int running = 1;
 
@@ -157,25 +149,31 @@ int main(void) {
                 printf("SDL_QUIT reçu\n");
                 running = 0;
             }
+
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) {
                 printf("SDL_WINDOWEVENT_CLOSE reçu\n");
                 running = 0;
             }
+
             if (event.type == SDL_KEYDOWN) {
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     running = 0;
                 }
+
                 if (event.key.keysym.sym == get_key_from_char(cfg.key_quit)) {
                     running = 0;
                 }
+
                 if (event.key.keysym.sym == get_key_from_char(cfg.key_jump) && !player.isJumping && !gameOver) {
                     player.velY = JUMP_FORCE;
                     player.isJumping = 1;
                 }
+
                 if (event.key.keysym.sym == get_key_from_char(cfg.key_jump) && player.isJumping && !player.DoubleJump && !gameOver) {
                     player.velY = JUMP_FORCE;
                     player.DoubleJump = 1;
                 }
+
                 if (event.key.keysym.sym == get_key_from_char(cfg.key_crouch) && !gameOver) {
                     if (!player.Crouching) {
                         player.Crouching = 1;
@@ -187,18 +185,14 @@ int main(void) {
                         player.y -= player.baseHeight / 2;
                     }
                 }
+
                 if (event.key.keysym.sym == SDLK_r) {
                     reset_game(&player);
                     init_map(&gameMap, cfg.width, cfg.height);
                     scoreSys.currentScore = 0;
                     gameOver = 0;
                 }
-                if (event.key.keysym.sym == SDLK_r && gameOver) {
-                    reset_game(&player);
-                    init_map(&gameMap, cfg.width, cfg.height);
-                    scoreSys.currentScore = 0;
-                    gameOver = 0;
-                }
+
                 if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_q) {
                     leftPressed = 1;
                 }
@@ -206,6 +200,7 @@ int main(void) {
                     rightPressed = 1;
                 }
             }
+
             if (event.type == SDL_KEYUP) {
                 if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_q) {
                     leftPressed = 0;
@@ -217,22 +212,96 @@ int main(void) {
         }
 
         if (!gameOver) {
+            // Mouvement horizontal AVEC collision intelligente
             player.velX = 0;
             if (leftPressed) player.velX -= PLAYER_SPEED;
             if (rightPressed) player.velX += PLAYER_SPEED;
-            player.x += player.velX;
-
+            
+            float newX = player.x + player.velX;
+            
+            // Collision horizontale uniquement si on est au même niveau
+            int horizontalCollision = 0;
+            SDL_Rect futurePlayerRect = {(int)newX, (int)player.y, player.width, player.height};
+            
+            for (int i = 0; i < MAX_OBSTACLES; i++) {
+                if (gameMap.obstacles[i].active) {
+                    SDL_Rect obstacleRect = {(int)gameMap.obstacles[i].x, (int)gameMap.obstacles[i].y,
+                                              gameMap.obstacles[i].width, gameMap.obstacles[i].height};
+                    
+                    if (SDL_HasIntersection(&futurePlayerRect, &obstacleRect)) {
+                        float obstacleTop = gameMap.obstacles[i].y;
+                        float playerBottom = player.y + player.height;
+                        
+                        // Si le joueur est DANS l'obstacle verticalement (pas en train de sauter par-dessus)
+                        if (playerBottom > obstacleTop + 5) {
+                            horizontalCollision = 1;
+                            
+                            float playerCenter = player.x + player.width / 2.0f;
+                            float obstacleCenter = gameMap.obstacles[i].x + gameMap.obstacles[i].width / 2.0f;
+                            
+                            if (playerCenter < obstacleCenter) {
+                                player.x = gameMap.obstacles[i].x - player.width - 1;
+                            } else {
+                                player.x = gameMap.obstacles[i].x + gameMap.obstacles[i].width + 1;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (!horizontalCollision) {
+                player.x = newX;
+            }
+            
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > cfg.width) player.x = cfg.width - player.width;
 
+            // Gravité et collision verticale
             player.velY += GRAVITY;
-            player.y += player.velY;
+            float newY = player.y + player.velY;
             
-            if (player.y >= GROUND_Y) {
+            int onGround = 0;
+            SDL_Rect futurePlayerRectY = {(int)player.x, (int)newY, player.width, player.height};
+            
+            if (newY >= GROUND_Y) {
                 player.y = GROUND_Y;
                 player.velY = 0;
                 player.isJumping = 0;
                 player.DoubleJump = 0;
+                onGround = 1;
+            } else {
+                int landed = 0;
+                for (int i = 0; i < MAX_OBSTACLES; i++) {
+                    if (gameMap.obstacles[i].active) {
+                        SDL_Rect obstacleRect = {(int)gameMap.obstacles[i].x, (int)gameMap.obstacles[i].y,
+                                                  gameMap.obstacles[i].width, gameMap.obstacles[i].height};
+                        
+                        if (player.velY > 0 && SDL_HasIntersection(&futurePlayerRectY, &obstacleRect)) {
+                            if (player.y + player.height <= gameMap.obstacles[i].y + 5) {
+                                player.y = gameMap.obstacles[i].y - player.height;
+                                player.velY = 0;
+                                player.isJumping = 0;
+                                player.DoubleJump = 0;
+                                landed = 1;
+                                onGround = 1;
+                                break;
+                            }
+                        }
+                        
+                        if (player.velY < 0 && SDL_HasIntersection(&futurePlayerRectY, &obstacleRect)) {
+                            if (player.y >= gameMap.obstacles[i].y + gameMap.obstacles[i].height - 5) {
+                                player.y = gameMap.obstacles[i].y + gameMap.obstacles[i].height;
+                                player.velY = 0;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (!landed) {
+                    player.y = newY;
+                }
             }
 
             if (player.y > cfg.height + 200) {
@@ -242,22 +311,8 @@ int main(void) {
             }
             
             update_map(&gameMap, cfg.width, cfg.height);
-            
-            for (int i = 0; i < gameMap.obstacleCount; i++) {
-                if (gameMap.obstacles[i].active) {
-                    SDL_Rect playerRect = {(int)player.x, (int)player.y, player.width, player.height};
-                    SDL_Rect obstacleRect = {(int)gameMap.obstacles[i].x, (int)gameMap.obstacles[i].y, gameMap.obstacles[i].width, gameMap.obstacles[i].height};
-                    
-                    if (SDL_HasIntersection(&playerRect, &obstacleRect)) {
-                        gameOver = 1;
-                        printf("Game Over! Score: %d, High Score: %d\n", scoreSys.currentScore, scoreSys.highScore);
-                    }
-                }
-            }
-
             update_score(&scoreSys, (int)gameMap.speed);
         }
-
         
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -267,17 +322,18 @@ int main(void) {
         SDL_RenderFillRect(renderer, &ground);
 
         if (gameOver) {
-            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); 
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         } else {
-            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); 
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
         }
         SDL_Rect playerRect = {(int)player.x, (int)player.y, player.width, player.height};
         SDL_RenderFillRect(renderer, &playerRect);
 
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        for (int i = 0; i < gameMap.obstacleCount; i++) {
+        for (int i = 0; i < MAX_OBSTACLES; i++) {
             if (gameMap.obstacles[i].active) {
-                SDL_Rect obstacleRect = {(int)gameMap.obstacles[i].x, (int)gameMap.obstacles[i].y, gameMap.obstacles[i].width, gameMap.obstacles[i].height};
+                SDL_Rect obstacleRect = {(int)gameMap.obstacles[i].x, (int)gameMap.obstacles[i].y, 
+                                          gameMap.obstacles[i].width, gameMap.obstacles[i].height};
                 SDL_RenderFillRect(renderer, &obstacleRect);
             }
         }
@@ -305,15 +361,19 @@ int main(void) {
 
 void render_text(SDL_Renderer *renderer, TTF_Font *font, const char *text, int x, int y, SDL_Color color) {
     if (!font) return;
+
     SDL_Surface *surface = TTF_RenderText_Solid(font, text, color);
     if (!surface) return;
+
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
     if (!texture) {
         SDL_FreeSurface(surface);
         return;
     }
+
     SDL_Rect dst = {x, y, surface->w, surface->h};
     SDL_RenderCopy(renderer, texture, NULL, &dst);
+
     SDL_DestroyTexture(texture);
     SDL_FreeSurface(surface);
 }

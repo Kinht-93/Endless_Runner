@@ -26,6 +26,6 @@ typedef struct {
 
 void init_map(Map *map, int screenWidth, int screenHeight);
 void update_map(Map *map, int screenWidth, int screenHeight);
-void generate_segment(Map *map, int startX, int screenWidth, int screenHeight);  // ← AJOUTE CETTE LIGNE
+void generate_segment(Map *map, int startX, int screenWidth, int screenHeight);
 
 #endif
