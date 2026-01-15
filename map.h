@@ -6,6 +6,7 @@
 #include <time.h>
 
 #define MAX_OBSTACLES 20
+#define MAX_ENEMIES 15
 #define SEGMENT_WIDTH 400
 #define MIN_GAP 80
 #define GROUND_Y 500
@@ -17,7 +18,15 @@ typedef struct {
 } Obstacle;
 
 typedef struct {
+    float x, y;
+    int width, height;
+    int active;
+    int isFlying;  // 1 = en l'air, 0 = au sol
+} Enemy;
+
+typedef struct {
     Obstacle obstacles[MAX_OBSTACLES];
+    Enemy enemies[MAX_ENEMIES];
     int obstacleCount;
     float speed;
     float acceleration;

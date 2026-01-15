@@ -8,6 +8,7 @@
 #include "score.h"
 
 #define MAX_OBSTACLES 20
+#define MAX_ENEMIES 15
 
 typedef struct {
     float x, y;
@@ -92,78 +93,60 @@ void render_text(SDL_Renderer *renderer, TTF_Font *font, const char *text, int x
 void draw_menu(SDL_Renderer *renderer, TTF_Font *font, int selected, Config *cfg) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-
     SDL_Color white = {255, 255, 255, 255};
     SDL_Color yellow = {255, 255, 0, 255};
-
     const char *options[] = {"Lancer le jeu", "Options", "Score", "Quitter"};
     for (int i = 0; i < 4; i++) {
         SDL_Color color = (i == selected) ? yellow : white;
         render_text(renderer, font, options[i], 100, 100 + i * 50, color);
     }
-
     SDL_RenderPresent(renderer);
 }
 
 void draw_options(SDL_Renderer *renderer, TTF_Font *font, int selected, Config *cfg) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-
     SDL_Color white = {255, 255, 255, 255};
     SDL_Color yellow = {255, 255, 0, 255};
-
     char buffer[256];
     sprintf(buffer, "Resolution: %dx%d", cfg->width, cfg->height);
     SDL_Color color = (selected == 0) ? yellow : white;
     render_text(renderer, font, buffer, 100, 100, color);
-
     sprintf(buffer, "Sound: %s", cfg->sound);
     color = (selected == 1) ? yellow : white;
     render_text(renderer, font, buffer, 100, 150, color);
-
     sprintf(buffer, "Username: %s", cfg->username);
     color = (selected == 2) ? yellow : white;
     render_text(renderer, font, buffer, 100, 200, color);
-
     sprintf(buffer, "Key Jump: %c", cfg->key_jump);
     color = (selected == 3) ? yellow : white;
     render_text(renderer, font, buffer, 100, 250, color);
-
     sprintf(buffer, "Key Quit: %c", cfg->key_quit);
     color = (selected == 4) ? yellow : white;
     render_text(renderer, font, buffer, 100, 300, color);
-
     sprintf(buffer, "Key Crouch: %c", cfg->key_crouch);
     color = (selected == 5) ? yellow : white;
     render_text(renderer, font, buffer, 100, 350, color);
-
     sprintf(buffer, "Key Reset: %c", cfg->key_reset);
     color = (selected == 6) ? yellow : white;
     render_text(renderer, font, buffer, 100, 400, color);
-
     render_text(renderer, font, "Appuyez sur Entree pour modifier, Echap pour retour", 100, 450, white);
-
     SDL_RenderPresent(renderer);
 }
 
 void draw_score(SDL_Renderer *renderer, TTF_Font *font, int highScore) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-
     SDL_Color white = {255, 255, 255, 255};
-
     char buffer[256];
     sprintf(buffer, "Meilleur Score: %d", highScore);
     render_text(renderer, font, buffer, 100, 100, white);
-
     render_text(renderer, font, "Appuyez sur une touche pour retour", 100, 150, white);
-
     SDL_RenderPresent(renderer);
 }
 
 int edit_option(Config *cfg, int selected, SDL_Renderer *renderer, TTF_Font *font) {
-    // Simple editing: for now, just toggle sound, for others, wait for input
-    if (selected == 1) { // sound
+    if (selected == 1) {
         if (strcmp(cfg->sound, "ON") == 0) {
             strcpy(cfg->sound, "OFF");
         } else {
@@ -171,9 +154,7 @@ int edit_option(Config *cfg, int selected, SDL_Renderer *renderer, TTF_Font *fon
         }
         return 1;
     }
-    // For others, perhaps open text input or wait for key
-    // For simplicity, let's assume we use SDL_StartTextInput for username, and for keys, wait for key press
-    if (selected == 2) { // username
+    if (selected == 2) {
         SDL_StartTextInput();
         char input[256] = "";
         int done = 0;
@@ -202,14 +183,14 @@ int edit_option(Config *cfg, int selected, SDL_Renderer *renderer, TTF_Font *fon
         SDL_StopTextInput();
         return 1;
     }
-    if (selected >= 3 && selected <= 6) { // keys
+    if (selected >= 3 && selected <= 6) {
         SDL_Event event;
         int done = 0;
         while (!done) {
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_KEYDOWN) {
                     char key = (char)event.key.keysym.sym;
-                    if (key >= 32 && key <= 126) { // printable
+                    if (key >= 32 && key <= 126) {
                         if (selected == 3) cfg->key_jump = key;
                         else if (selected == 4) cfg->key_quit = key;
                         else if (selected == 5) cfg->key_crouch = key;
@@ -227,7 +208,7 @@ int edit_option(Config *cfg, int selected, SDL_Renderer *renderer, TTF_Font *fon
         }
         return 1;
     }
-    if (selected == 0) { // resolution, for simplicity, cycle through some options
+    if (selected == 0) {
         if (cfg->width == 800 && cfg->height == 600) {
             cfg->width = 1024; cfg->height = 768;
         } else if (cfg->width == 1024 && cfg->height == 768) {
@@ -244,18 +225,15 @@ int edit_option(Config *cfg, int selected, SDL_Renderer *renderer, TTF_Font *fon
 
 int main(void) {
     Config cfg = load_config();
-
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Erreur SDL_Init: %s\n", SDL_GetError());
         return 1;
     }
-
     if (TTF_Init() < 0) {
         printf("Erreur TTF_Init: %s\n", TTF_GetError());
         SDL_Quit();
         return 1;
     }
-
     SDL_Window* menuWindow = SDL_CreateWindow("Endless Runner Menu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
     if (!menuWindow) {
         printf("Erreur SDL_CreateWindow: %s\n", SDL_GetError());
@@ -263,7 +241,6 @@ int main(void) {
         SDL_Quit();
         return 1;
     }
-
     SDL_Renderer* menuRenderer = SDL_CreateRenderer(menuWindow, -1, SDL_RENDERER_ACCELERATED);
     if (!menuRenderer) {
         printf("Erreur SDL_CreateRenderer: %s\n", SDL_GetError());
@@ -272,18 +249,15 @@ int main(void) {
         SDL_Quit();
         return 1;
     }
-
-    TTF_Font *font = TTF_OpenFont("/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf", 24);
+    TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
     if (!font) {
         printf("Erreur TTF_OpenFont: %s\n", TTF_GetError());
         printf("Le texte ne sera pas affiché.\n");
     }
-
     MenuState state = MAIN_MENU;
     int selected = 0;
     int menu_running = 1;
     SDL_Event menu_event;
-
     while (menu_running) {
         while (SDL_PollEvent(&menu_event)) {
             if (menu_event.type == SDL_QUIT) {
@@ -295,15 +269,15 @@ int main(void) {
                     } else if (menu_event.key.keysym.sym == SDLK_DOWN) {
                         selected = (selected + 1) % 4;
                     } else if (menu_event.key.keysym.sym == SDLK_RETURN) {
-                        if (selected == 0) { // Lancer le jeu
+                        if (selected == 0) {
                             state = GAME;
                             menu_running = 0;
-                        } else if (selected == 1) { // Options
+                        } else if (selected == 1) {
                             state = OPTIONS;
                             selected = 0;
-                        } else if (selected == 2) { // Score
+                        } else if (selected == 2) {
                             state = SCORE_VIEW;
-                        } else if (selected == 3) { // Quitter
+                        } else if (selected == 3) {
                             menu_running = 0;
                         }
                     }
@@ -326,7 +300,6 @@ int main(void) {
                 }
             }
         }
-
         if (state == MAIN_MENU) {
             draw_menu(menuRenderer, font, selected, &cfg);
         } else if (state == OPTIONS) {
@@ -337,29 +310,21 @@ int main(void) {
             load_high_score(&dummy);
             draw_score(menuRenderer, font, dummy.highScore);
         }
-
         SDL_Delay(16);
     }
-
     SDL_DestroyRenderer(menuRenderer);
     SDL_DestroyWindow(menuWindow);
-
     if (state != GAME) {
         if (font) TTF_CloseFont(font);
         TTF_Quit();
         SDL_Quit();
         return 0;
     }
-
-    // Now for game
-    // Reload config
+    
     cfg = load_config();
-
-    // Add audio if needed
     if (strcmp(cfg.sound, "ON") == 0) {
         SDL_InitSubSystem(SDL_INIT_AUDIO);
     }
-
     SDL_Window* window = SDL_CreateWindow(
         cfg.username,
         SDL_WINDOWPOS_CENTERED,
@@ -368,7 +333,6 @@ int main(void) {
         cfg.height,
         SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
     );
-
     if (!window) {
         printf("Erreur SDL_CreateWindow: %s\n", SDL_GetError());
         if (font) TTF_CloseFont(font);
@@ -376,9 +340,7 @@ int main(void) {
         SDL_Quit();
         return 1;
     }
-
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-
     if (!renderer) {
         printf("Erreur SDL_CreateRenderer: %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
@@ -387,7 +349,6 @@ int main(void) {
         SDL_Quit();
         return 1;
     }
-
     Player player = {
         .x = 100,
         .y = GROUND_Y,
@@ -402,49 +363,39 @@ int main(void) {
         .baseWidth = 50,
         .life = 3
     };
-
     Map gameMap;
     init_map(&gameMap, cfg.width, cfg.height);
-
     ScoreSystem scoreSys;
     init_score(&scoreSys);
-
     int gameOver = 0;
     int leftPressed = 0, rightPressed = 0;
     SDL_Event event;
     int running = 1;
-
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 printf("SDL_QUIT reçu\n");
                 running = 0;
             }
-
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) {
                 printf("SDL_WINDOWEVENT_CLOSE reçu\n");
                 running = 0;
             }
-
             if (event.type == SDL_KEYDOWN) {
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     running = 0;
                 }
-
                 if (event.key.keysym.sym == get_key_from_char(cfg.key_quit)) {
                     running = 0;
                 }
-
                 if (event.key.keysym.sym == get_key_from_char(cfg.key_jump) && !player.isJumping && !gameOver) {
                     player.velY = JUMP_FORCE;
                     player.isJumping = 1;
                 }
-
                 if (event.key.keysym.sym == get_key_from_char(cfg.key_jump) && player.isJumping && !player.DoubleJump && !gameOver) {
                     player.velY = JUMP_FORCE;
                     player.DoubleJump = 1;
                 }
-
                 if (event.key.keysym.sym == get_key_from_char(cfg.key_crouch) && !gameOver) {
                     if (!player.Crouching) {
                         player.Crouching = 1;
@@ -456,14 +407,12 @@ int main(void) {
                         player.y -= player.baseHeight / 2;
                     }
                 }
-
                 if (event.key.keysym.sym == SDLK_r) {
                     reset_game(&player);
                     init_map(&gameMap, cfg.width, cfg.height);
                     scoreSys.currentScore = 0;
                     gameOver = 0;
                 }
-
                 if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_q) {
                     leftPressed = 1;
                 }
@@ -471,7 +420,6 @@ int main(void) {
                     rightPressed = 1;
                 }
             }
-
             if (event.type == SDL_KEYUP) {
                 if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_q) {
                     leftPressed = 0;
@@ -481,16 +429,13 @@ int main(void) {
                 }
             }
         }
-
         if (!gameOver) {
-            // Mouvement horizontal AVEC collision intelligente
             player.velX = 0;
             if (leftPressed) player.velX -= PLAYER_SPEED;
             if (rightPressed) player.velX += PLAYER_SPEED;
             
             float newX = player.x + player.velX;
             
-            // Collision horizontale uniquement si on est au même niveau
             int horizontalCollision = 0;
             SDL_Rect futurePlayerRect = {(int)newX, (int)player.y, player.width, player.height};
             
@@ -503,7 +448,6 @@ int main(void) {
                         float obstacleTop = gameMap.obstacles[i].y;
                         float playerBottom = player.y + player.height;
                         
-                        // Si le joueur est DANS l'obstacle verticalement (pas en train de sauter par-dessus)
                         if (playerBottom > obstacleTop + 5) {
                             horizontalCollision = 1;
                             
@@ -525,10 +469,13 @@ int main(void) {
                 player.x = newX;
             }
             
-            if (player.x < 0) player.x = 0;
+            if (player.x < 0) {
+                player_die(&player);
+                init_map(&gameMap, cfg.width, cfg.height);
+                scoreSys.currentScore = 0;
+            }
             if (player.x + player.width > cfg.width) player.x = cfg.width - player.width;
 
-            // Gravité et collision verticale
             player.velY += GRAVITY;
             float newY = player.y + player.velY;
             
@@ -583,6 +530,21 @@ int main(void) {
             
             update_map(&gameMap, cfg.width, cfg.height);
             update_score(&scoreSys, (int)gameMap.speed);
+            
+            // NOUVEAU : Collision avec ennemis (mortelle)
+            for (int i = 0; i < MAX_ENEMIES; i++) {
+                if (gameMap.enemies[i].active) {
+                    SDL_Rect playerRect = {(int)player.x, (int)player.y, player.width, player.height};
+                    SDL_Rect enemyRect = {(int)gameMap.enemies[i].x, (int)gameMap.enemies[i].y, 
+                                           gameMap.enemies[i].width, gameMap.enemies[i].height};
+                    
+                    if (SDL_HasIntersection(&playerRect, &enemyRect)) {
+                        player_die(&player);
+                        init_map(&gameMap, cfg.width, cfg.height);
+                        scoreSys.currentScore = 0;
+                    }
+                }
+            }
         }
         
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -600,12 +562,23 @@ int main(void) {
         SDL_Rect playerRect = {(int)player.x, (int)player.y, player.width, player.height};
         SDL_RenderFillRect(renderer, &playerRect);
 
+        // Obstacles blancs
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         for (int i = 0; i < MAX_OBSTACLES; i++) {
             if (gameMap.obstacles[i].active) {
                 SDL_Rect obstacleRect = {(int)gameMap.obstacles[i].x, (int)gameMap.obstacles[i].y, 
                                           gameMap.obstacles[i].width, gameMap.obstacles[i].height};
                 SDL_RenderFillRect(renderer, &obstacleRect);
+            }
+        }
+        
+        // NOUVEAU : Ennemis rouges
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        for (int i = 0; i < MAX_ENEMIES; i++) {
+            if (gameMap.enemies[i].active) {
+                SDL_Rect enemyRect = {(int)gameMap.enemies[i].x, (int)gameMap.enemies[i].y, 
+                                       gameMap.enemies[i].width, gameMap.enemies[i].height};
+                SDL_RenderFillRect(renderer, &enemyRect);
             }
         }
 
@@ -620,12 +593,10 @@ int main(void) {
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
-
     if (font) TTF_CloseFont(font);
     TTF_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
     return 0;
 }
