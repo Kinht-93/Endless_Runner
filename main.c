@@ -345,7 +345,7 @@ int main(void) {
         SDL_InitSubSystem(SDL_INIT_AUDIO);
     }
     SDL_Window* window = SDL_CreateWindow(
-        "Endless Runner",
+        cfg.username,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         cfg.width,
@@ -516,8 +516,8 @@ int main(void) {
             int onGround = 0;
             SDL_Rect futurePlayerRectY = {(int)player.x, (int)newY, player.width, player.height};
             
-            if (newY >= GROUND_Y) {
-                player.y = GROUND_Y;
+            if (newY + player.height >= GROUND_Y + 50) {
+                player.y = GROUND_Y + 50 - player.height;
                 player.velY = 0;
                 player.isJumping = 0;
                 player.DoubleJump = 0;
@@ -628,9 +628,7 @@ int main(void) {
 
         sprintf(scoreText, "High Score: %d", scoreSys.highScore);
         render_text(renderer, font, scoreText, 10, 40, white);
-        
-        render_text(renderer, font, cfg.username, (int)player.x - 20, (int)player.y - 30, white);
-        
+
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
