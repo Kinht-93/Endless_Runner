@@ -21,7 +21,7 @@ typedef struct {
     float x, y;
     int width, height;
     int active;
-    int isFlying;  // 1 = en l'air, 0 = au sol
+    int isFlying;
 } Enemy;
 
 typedef struct {
