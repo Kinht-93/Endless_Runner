@@ -33,7 +33,6 @@ void update_map(Map *map, int screenWidth, int screenHeight) {
         }
     }
     
-    // Déplacer les ennemis
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (map->enemies[i].active) {
             map->enemies[i].x -= map->speed;
@@ -63,7 +62,6 @@ void update_map(Map *map, int screenWidth, int screenHeight) {
 }
 
 void generate_segment(Map *map, int startX, int screenWidth, int screenHeight) {
-    // Générer obstacles normaux (blancs)
     int numObstacles = rand() % 2 + 1;
     
     for (int i = 0; i < numObstacles; i++) {
@@ -84,7 +82,6 @@ void generate_segment(Map *map, int startX, int screenWidth, int screenHeight) {
         map->obstacles[idx].active = 1;
     }
     
-    // Générer ennemis (rouges) - 30% de chance
     if (rand() % 100 < 30) {
         int idx = -1;
         for (int j = 0; j < MAX_ENEMIES; j++) {
@@ -99,13 +96,10 @@ void generate_segment(Map *map, int startX, int screenWidth, int screenHeight) {
             map->enemies[idx].width = 35 + rand() % 20;
             map->enemies[idx].height = 35 + rand() % 20;
             
-            // 50% chance d'être en l'air, 50% au sol
             if (rand() % 2 == 0) {
-                // Au sol
                 map->enemies[idx].y = GROUND_Y;
                 map->enemies[idx].isFlying = 0;
             } else {
-                // En l'air (hauteur aléatoire)
                 map->enemies[idx].y = GROUND_Y - 100 - (rand() % 150);
                 map->enemies[idx].isFlying = 1;
             }
