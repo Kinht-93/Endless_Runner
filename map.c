@@ -3,7 +3,7 @@
 void init_map(Map *map, int screenWidth, int screenHeight) {
     srand(time(NULL));
     map->speed = 5.0f;
-    map->acceleration = 0.001f;
+    map->acceleration = 0.005f;
     map->distance = 0;
     
     for (int i = 0; i < MAX_OBSTACLES; i++) {

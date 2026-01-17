@@ -6,7 +6,7 @@
 #include <time.h>
 
 #define MAX_OBSTACLES 20
-#define MAX_ENEMIES 15
+#define MAX_ENEMIES 20
 #define SEGMENT_WIDTH 400
 #define MIN_GAP 80
 #define GROUND_Y 500

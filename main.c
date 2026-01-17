@@ -8,7 +8,7 @@
 #include "score.h"
 
 #define MAX_OBSTACLES 20
-#define MAX_ENEMIES 15
+#define MAX_ENEMIES 20
 
 typedef struct {
     float x, y;
@@ -89,6 +89,10 @@ void render_text(SDL_Renderer *renderer, TTF_Font *font, const char *text, int x
     SDL_DestroyTexture(texture);
     SDL_FreeSurface(surface);
 }
+
+
+
+
 
 void draw_menu(SDL_Renderer *renderer, TTF_Font *font, int selected, Config *cfg) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -223,6 +227,11 @@ int edit_option(Config *cfg, int selected, SDL_Renderer *renderer, TTF_Font *fon
     return 0;
 }
 
+
+
+
+
+
 int main(void) {
     Config cfg = load_config();
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -258,6 +267,11 @@ int main(void) {
     int selected = 0;
     int menu_running = 1;
     SDL_Event menu_event;
+
+
+
+
+
     while (menu_running) {
         while (SDL_PollEvent(&menu_event)) {
             if (menu_event.type == SDL_QUIT) {
@@ -320,6 +334,11 @@ int main(void) {
         SDL_Quit();
         return 0;
     }
+
+
+
+
+
     
     cfg = load_config();
     if (strcmp(cfg.sound, "ON") == 0) {
@@ -371,6 +390,11 @@ int main(void) {
     int leftPressed = 0, rightPressed = 0;
     SDL_Event event;
     int running = 1;
+
+
+
+
+
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -392,7 +416,7 @@ int main(void) {
                     player.velY = JUMP_FORCE;
                     player.isJumping = 1;
                 }
-                if (event.key.keysym.sym == get_key_from_char(cfg.key_jump) && player.isJumping && !player.DoubleJump && !gameOver) {
+                else if (event.key.keysym.sym == get_key_from_char(cfg.key_jump) && player.isJumping && !player.DoubleJump && !gameOver) {
                     player.velY = JUMP_FORCE;
                     player.DoubleJump = 1;
                 }
@@ -429,6 +453,11 @@ int main(void) {
                 }
             }
         }
+
+
+
+
+
         if (!gameOver) {
             player.velX = 0;
             if (leftPressed) player.velX -= PLAYER_SPEED;
@@ -448,7 +477,7 @@ int main(void) {
                         float obstacleTop = gameMap.obstacles[i].y;
                         float playerBottom = player.y + player.height;
                         
-                        if (playerBottom > obstacleTop + 5) {
+                        if (playerBottom > obstacleTop + 1) {
                             horizontalCollision = 1;
                             
                             float playerCenter = player.x + player.width / 2.0f;
@@ -475,6 +504,11 @@ int main(void) {
                 scoreSys.currentScore = 0;
             }
             if (player.x + player.width > cfg.width) player.x = cfg.width - player.width;
+
+
+
+
+
 
             player.velY += GRAVITY;
             float newY = player.y + player.velY;
@@ -527,11 +561,15 @@ int main(void) {
                 init_map(&gameMap, cfg.width, cfg.height);
                 scoreSys.currentScore = 0;
             }
+
+
+
+
+
             
             update_map(&gameMap, cfg.width, cfg.height);
             update_score(&scoreSys, (int)gameMap.speed);
             
-            // NOUVEAU : Collision avec ennemis (mortelle)
             for (int i = 0; i < MAX_ENEMIES; i++) {
                 if (gameMap.enemies[i].active) {
                     SDL_Rect playerRect = {(int)player.x, (int)player.y, player.width, player.height};
@@ -546,23 +584,25 @@ int main(void) {
                 }
             }
         }
+
+
+
+
+
         
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
-        SDL_Rect ground = {0, GROUND_Y + player.height, cfg.width, cfg.height - GROUND_Y - player.height};
+        SDL_Rect ground = {0, GROUND_Y + 50, cfg.width, cfg.height - GROUND_Y - 50};
         SDL_RenderFillRect(renderer, &ground);
 
-        if (gameOver) {
-            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        } else {
+        if (!gameOver) {
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
         }
         SDL_Rect playerRect = {(int)player.x, (int)player.y, player.width, player.height};
         SDL_RenderFillRect(renderer, &playerRect);
 
-        // Obstacles blancs
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         for (int i = 0; i < MAX_OBSTACLES; i++) {
             if (gameMap.obstacles[i].active) {
@@ -572,7 +612,6 @@ int main(void) {
             }
         }
         
-        // NOUVEAU : Ennemis rouges
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         for (int i = 0; i < MAX_ENEMIES; i++) {
             if (gameMap.enemies[i].active) {
