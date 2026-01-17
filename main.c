@@ -345,7 +345,7 @@ int main(void) {
         SDL_InitSubSystem(SDL_INIT_AUDIO);
     }
     SDL_Window* window = SDL_CreateWindow(
-        "Endless_Runner"
+        "Endless_Runner",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         cfg.width,
