@@ -345,7 +345,6 @@ int main(void) {
         SDL_InitSubSystem(SDL_INIT_AUDIO);
     }
     SDL_Window* window = SDL_CreateWindow(
-        cfg.username,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         cfg.width,
@@ -628,7 +627,9 @@ int main(void) {
 
         sprintf(scoreText, "High Score: %d", scoreSys.highScore);
         render_text(renderer, font, scoreText, 10, 40, white);
-
+        
+        render_text(renderer, font, cfg.username, (int)player.x - 20, (int)player.y - 30, white);
+        
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
